@@ -1,0 +1,117 @@
+---
+name: modal-fundamentals
+description: Core primitives for building and running Modal applications. Use when creating Apps, defining Functions, writing entrypoints, deploying, or managing environments and CLI workflows.
+---
+
+# Modal Fundamentals
+
+Use this skill when building, running, or deploying Modal applications from scratch or when you need to understand the core execution model.
+
+## When to Use This Skill
+
+- Creating a new Modal App or Function
+- Running ephemeral apps with `modal run` or `modal serve`
+- Deploying persistent apps with `modal deploy`
+- Writing `local_entrypoint` or remote entrypoints
+- Managing Modal environments (dev/staging/prod)
+- Understanding the App/Function/container relationship
+- Working with the Modal CLI or Python client
+
+## Core Concepts
+
+### App
+
+`modal.App` groups one or more Functions for atomic deployment.
+
+```python
+import modal
+
+app = modal.App(name="my-app")
+
+@app.function()
+def f():
+    print("Hello world!")
+```
+
+### Function
+
+Each `Function` is an independent autoscaling unit. Zero containers run (zero cost) when idle.
+
+### Entrypoints
+
+- `@app.local_entrypoint()` — runs locally, typically calls `.remote()` on Functions
+- A single `@app.function()` can be the entrypoint if no `local_entrypoint` exists
+- `modal run script.py::app.func_name` to specify a particular function
+
+Argument parsing is automatic for primitive types:
+
+```python
+@app.local_entrypoint()
+def main(foo: int, bar: str):
+    some_function.remote(foo, bar)
+```
+
+## Execution Modes
+
+| Command | Behavior |
+|---------|----------|
+| `modal run script.py` | Ephemeral app, stops when script exits |
+| `modal run --detach script.py` | Ephemeral but keeps running after client disconnects |
+| `modal serve script.py` | Ephemeral with live-reload for web endpoint development |
+| `modal deploy script.py` | Persistent deployed app |
+
+### Programmatic execution
+
+```python
+with modal.enable_output():
+    with app.run():
+        some_function.remote()
+```
+
+## Deployment
+
+```python
+app.deploy(name="my-app", strategy="rolling")
+```
+
+Strategies: `rolling` (default, gradual traffic shift) or `recreate` (terminate all, then start new).
+
+### Environments
+
+Environments isolate resources (Secrets, Volumes, deployed Apps):
+
+```bash
+modal environment create staging
+modal run --env staging script.py
+modal deploy --env production script.py
+```
+
+Set default: `modal config set-environment staging`
+
+## Symptom Triage
+
+### "modal run does nothing"
+- Ensure you have a `@app.local_entrypoint()` or exactly one `@app.function()`
+- Check `modal setup` was completed
+
+### "App deploys but Functions don't run"
+- Scheduled Functions need `modal deploy`, not `modal run`
+- Non-scheduled Functions need explicit invocation (web URL, `.remote()`, etc.)
+
+### "Logs are missing"
+- Use `modal.enable_output()` context manager for programmatic runs
+- Check the Modal dashboard for deployed app logs
+
+## Reference Map
+
+- `references/apps-and-functions.md` — App/Function lifecycle, naming, entrypoints
+- `references/cli-commands.md` — CLI reference for run, serve, deploy, app, environment
+- `references/environments.md` — Environment isolation and configuration
+- `references/local-development.md` — Local dev workflows, serve, hot reload
+
+## Guardrails
+
+- Everything is code — no YAML configuration files
+- `modal.Stub` is removed since Modal 1.0; use `modal.App`
+- Protect `app.run()` in `if __name__ == "__main__"` blocks to avoid running in containers
+- Use `--detach` for long-running ephemeral jobs where the client may disconnect
