@@ -200,6 +200,60 @@ sb.exec("docker", "run", "-d", "-p", "80:80", "nginx:latest").wait()
 - Higher resource requirements than standard sandboxes
 - Alpha feature — may change
 
+## Go SDK
+
+```go
+mc, _ := modal.NewClient()
+app, _ := mc.Apps.FromName(ctx, "my-app", &modal.AppFromNameParams{CreateIfMissing: true})
+image := mc.Images.FromRegistry("python:3.11", nil)
+
+// Create sandbox with GPU and timeout
+sb, _ := mc.Sandboxes.Create(ctx, app, image, &modal.SandboxCreateParams{
+    GPU:       "T4",
+    Timeout:   10 * time.Minute,
+    MemoryMiB: 4096,
+})
+defer sb.Terminate(ctx, nil)
+
+// Execute command
+p, _ := sb.Exec(ctx, []string{"python", "-c", "print('hello')"}, nil)
+stdout, _ := io.ReadAll(p.Stdout)
+fmt.Println(string(stdout))
+
+// Snapshot filesystem as Image
+img, _ := sb.SnapshotFilesystem(ctx)
+```
+
+## TypeScript SDK
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+const app = await modal.apps.fromName("my-app", { createIfMissing: true });
+const image = modal.images.fromRegistry("python:3.13");
+
+// Create sandbox
+const sb = await modal.sandboxes.create(app, image, {
+    gpu: "T4",
+    timeoutMs: 600000,
+    memoryMiB: 4096,
+});
+
+// Execute command
+const proc = await sb.exec(["python", "-c", "print('hello')"]);
+console.log(await proc.stdout.readText());
+
+// Write and read files
+const f = await sb.open("/tmp/data.txt", "w");
+await f.write("some data");
+await f.close();
+
+// Snapshot filesystem
+const snapshot = await sb.snapshotFilesystem();
+await sb.terminate();
+```
+
 ## Network Controls
 
 ```python

@@ -162,6 +162,12 @@ Web Function request timeout is 150 seconds by default. For long-running request
 - For >150s work, use `.spawn()` + polling pattern
 - Webhooks have their own timeout configuration
 
+## Go/TypeScript SDK Note
+
+Web endpoint definition (`@modal.fastapi_endpoint`, `@modal.asgi_app`, `@modal.wsgi_app`) is **Python-only**. The Go and TypeScript SDKs cannot define web endpoints.
+
+However, you can call Functions backing web endpoints from Go/TS via `fn.Remote()` / `fn.remote()`. You can also create Sandboxes that run web servers internally (accessible via tunneled ports or within the Modal network).
+
 ## Symptom Triage
 
 ### "Endpoint returns 500"

@@ -98,6 +98,53 @@ Inject secrets into all Functions in an App:
 app = modal.App(secrets=[modal.Secret.from_name("shared-secret")])
 ```
 
+## Go SDK
+
+```go
+mc, _ := modal.NewClient()
+
+// Reference named secret
+secret, _ := mc.Secrets.FromName(ctx, "my-secret", &modal.SecretFromNameParams{
+    RequiredKeys: []string{"API_KEY"},
+})
+
+// Create inline secret
+secret2, _ := mc.Secrets.FromMap(ctx, map[string]string{
+    "API_KEY": "abc123",
+}, nil)
+
+// Use with Sandbox
+sb, _ := mc.Sandboxes.Create(ctx, app, image, &modal.SandboxCreateParams{
+    Secrets: []*modal.Secret{secret},
+})
+```
+
+## TypeScript SDK
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+// Reference named secret
+const secret = await modal.secrets.fromName("my-secret", {
+    requiredKeys: ["API_KEY"],
+});
+
+// Create inline secret
+const secret2 = await modal.secrets.fromObject({
+    API_KEY: "abc123",
+    DB_URL: "postgres://...",
+});
+
+// Use with Sandbox
+const sb = await modal.sandboxes.create(app, image, {
+    secrets: [secret, secret2],
+});
+
+// Delete a secret
+await modal.secrets.delete("old-secret");
+```
+
 ## Limits
 
 - Key names: <=16,384 chars, letters/digits/underscores, cannot start with digit

@@ -100,6 +100,47 @@ Includes: `app.deploy`, `app.stop`, `app.rollback`, `secret.create`, `secret.del
 
 **Note**: Container runtime activity (function invocations, sandbox exec) is NOT audited — only workspace-level actions.
 
+## Go SDK — Telemetry via gRPC Interceptors
+
+```go
+import (
+    modal "github.com/modal-labs/modal-client/go"
+    "google.golang.org/grpc"
+)
+
+// Custom interceptor for tracing/metrics
+func loggingInterceptor(ctx context.Context, method string, req, reply any,
+    cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+    start := time.Now()
+    err := invoker(ctx, method, req, reply, cc, opts...)
+    log.Printf("RPC %s took %v", method, time.Since(start))
+    return err
+}
+
+mc, _ := modal.NewClientWithOptions(&modal.ClientParams{
+    UnaryInterceptors: []grpc.UnaryClientInterceptor{loggingInterceptor},
+})
+```
+
+## TypeScript SDK — Telemetry via gRPC Middleware
+
+```typescript
+import { ModalClient } from "modal";
+
+const modal = new ModalClient({
+    grpcMiddleware: [
+        async (call, options, next) => {
+            const start = Date.now();
+            const result = await next(call, options);
+            console.log(`RPC ${call.method} took ${Date.now() - start}ms`);
+            return result;
+        },
+    ],
+});
+```
+
+Both SDKs support custom gRPC interceptors/middleware for integrating with OpenTelemetry, Datadog, or custom observability pipelines.
+
 ## Troubleshooting Guide
 
 ### Common Issues

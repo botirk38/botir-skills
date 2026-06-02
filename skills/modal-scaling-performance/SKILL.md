@@ -156,6 +156,42 @@ class Llm:
 - Randomness is frozen in snapshots — re-seed after restore if needed
 - GPU snapshots have driver compatibility limits; review docs before using
 
+## Go SDK — Autoscaler Control
+
+```go
+mc, _ := modal.NewClient()
+fn, _ := mc.Functions.FromName(ctx, "my-app", "my_function", nil)
+
+// Update autoscaler at runtime
+minC := uint32(2)
+maxC := uint32(50)
+bufC := uint32(5)
+fn.UpdateAutoscaler(ctx, &modal.FunctionUpdateAutoscalerParams{
+    MinContainers:    &minC,
+    MaxContainers:    &maxC,
+    BufferContainers: &bufC,
+})
+```
+
+## TypeScript SDK — Autoscaler Control
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+const fn = await modal.functions.fromName("my-app", "my_function");
+
+// Update autoscaler at runtime
+await fn.updateAutoscaler({
+    minContainers: 2,
+    maxContainers: 50,
+    bufferContainers: 5,
+    scaledownWindow: 300,
+});
+```
+
+Note: Defining autoscaler config (decorators, concurrency, batching, memory snapshots) is Python-only. Go/TS SDKs can update runtime autoscaler parameters for deployed Functions.
+
 ## Dynamic Function Configuration
 
 Change compute resources per call at runtime:

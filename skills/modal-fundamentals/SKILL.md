@@ -139,6 +139,59 @@ Key rules:
 - Use `modal.Mount` to add non-importable files explicitly
 - Set `MODAL_ENVIRONMENT` env var or `.modal/environment` file for default environment
 
+## Go SDK
+
+The Go SDK can call deployed Functions, create Sandboxes, and manage resources — but cannot define Functions.
+
+```go
+import modal "github.com/modal-labs/modal-client/go"
+
+// Create client
+mc, _ := modal.NewClient()
+
+// Reference an App
+app, _ := mc.Apps.FromName(ctx, "my-app", &modal.AppFromNameParams{CreateIfMissing: true})
+
+// Call a deployed Function
+fn, _ := mc.Functions.FromName(ctx, "my-app", "my_function", nil)
+result, _ := fn.Remote(ctx, []any{"arg1"}, nil)
+```
+
+Install: `go get -u github.com/modal-labs/modal-client/go` (requires Go 1.23+)
+
+## TypeScript SDK
+
+The TypeScript SDK mirrors Go capabilities — call Functions, create Sandboxes, manage resources.
+
+```typescript
+import { ModalClient } from "modal";
+
+const modal = new ModalClient();
+
+// Reference an App
+const app = await modal.apps.fromName("my-app", { createIfMissing: true });
+
+// Call a deployed Function
+const fn = await modal.functions.fromName("my-app", "my_function");
+const result = await fn.remote(["arg1"]);
+```
+
+Install: `npm install modal` (requires Node.js 22+)
+
+### SDK Feature Parity
+
+| Feature | Python | Go | TypeScript |
+|---------|--------|-----|-----------|
+| Define Functions | Yes | No | No |
+| Call Functions | Yes | Yes | Yes |
+| Sandboxes | Yes | Yes | Yes |
+| Volumes | Yes | Yes | Yes |
+| Queues | Yes | Yes | Yes |
+| Secrets | Yes | Yes | Yes |
+| Images | Yes | Yes | Yes |
+| Scheduling | Yes | No | No |
+| Web endpoints | Yes | No | No |
+
 ## Developing with LLMs
 
 When using AI assistants to write Modal code:

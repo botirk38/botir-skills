@@ -109,6 +109,51 @@ Default CPU soft limit: 16 cores above request. Disk default quota: 512 GiB (max
 
 Billing: charged on max(request, actual usage). Disk increases memory billing at 20:1 ratio.
 
+## Go SDK — GPU Sandboxes
+
+```go
+mc, _ := modal.NewClient()
+app, _ := mc.Apps.FromName(ctx, "ml-app", &modal.AppFromNameParams{CreateIfMissing: true})
+
+image := mc.Images.FromRegistry("nvidia/cuda:12.4.0-runtime-ubuntu22.04", nil)
+image = image.DockerfileCommands([]string{
+    "RUN pip install torch transformers",
+}, &modal.ImageDockerfileCommandsParams{GPU: "A100"})
+
+sb, _ := mc.Sandboxes.Create(ctx, app, image, &modal.SandboxCreateParams{
+    GPU:       "A100",
+    MemoryMiB: 16384,
+    Timeout:   30 * time.Minute,
+})
+
+// Call GPU-accelerated function
+fn, _ := mc.Functions.FromName(ctx, "ml-app", "infer", nil)
+result, _ := fn.Remote(ctx, []any{"prompt text"}, nil)
+```
+
+## TypeScript SDK — GPU Sandboxes
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+const app = await modal.apps.fromName("ml-app", { createIfMissing: true });
+const image = modal.images
+    .fromRegistry("nvidia/cuda:12.4.0-runtime-ubuntu22.04")
+    .dockerfileCommands(["RUN pip install torch transformers"], { gpu: "A100" });
+
+const sb = await modal.sandboxes.create(app, image, {
+    gpu: "A100",
+    memoryMiB: 16384,
+    timeoutMs: 1800000,
+});
+
+const fn = await modal.functions.fromName("ml-app", "infer");
+const result = await fn.remote(["prompt text"]);
+```
+
+GPU string format: `"T4"`, `"A100"`, `"H100:8"`, `"any"`, or arrays `["A100", "H100"]` for fallback.
+
 ## Multi-Node Clusters (Beta)
 
 For distributed training across multiple nodes using `@modal.experimental.clustered`:

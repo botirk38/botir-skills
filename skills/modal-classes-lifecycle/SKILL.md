@@ -124,6 +124,47 @@ FastModel().predict.remote("hello")
 
 Stackable: `Model.with_options(gpu="H100").with_options(scaledown_window=300)`
 
+## Go SDK — Calling Deployed Classes
+
+```go
+mc, _ := modal.NewClient()
+
+// Reference a deployed class
+cls, _ := mc.Cls.FromName(ctx, "my-app", "Model", nil)
+
+// Create a parameterized instance
+instance := cls.Create(map[string]any{"model_size": "large"})
+
+// Call a method
+result, _ := instance.Method("predict").Remote(ctx, []any{"hello"}, nil)
+
+// Spawn async
+call, _ := instance.Method("predict").Spawn(ctx, []any{"hello"}, nil)
+later, _ := call.Get(ctx, nil)
+```
+
+## TypeScript SDK — Calling Deployed Classes
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+// Reference a deployed class
+const cls = await modal.cls.fromName("my-app", "Model");
+
+// Create a parameterized instance
+const instance = await cls.create({ model_size: "large" });
+
+// Call a method
+const result = await instance.method("predict").remote(["hello"]);
+
+// Spawn async
+const call = await instance.method("predict").spawn(["hello"]);
+const later = await call.get();
+```
+
+Note: Go/TS SDKs can only **call** deployed classes — defining classes with lifecycle hooks (`@modal.enter`, `@modal.exit`) is Python-only.
+
 ## Symptom Triage
 
 ### "Model loads on every request"

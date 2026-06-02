@@ -154,6 +154,67 @@ def pipeline():
     results = list(step2.map(preprocessed))
 ```
 
+## Go SDK — Calling Deployed Functions
+
+```go
+mc, _ := modal.NewClient()
+fn, _ := mc.Functions.FromName(ctx, "my-app", "process_item", nil)
+
+// Single remote call
+result, _ := fn.Remote(ctx, []any{"arg1"}, nil)
+
+// Parallel spawns (fan-out)
+var calls []*modal.FunctionCall
+for i := 0; i < 100; i++ {
+    call, _ := fn.Spawn(ctx, []any{i}, nil)
+    calls = append(calls, call)
+}
+// Collect results (fan-in)
+for _, call := range calls {
+    result, _ := call.Get(ctx, nil)
+    fmt.Println(result)
+}
+
+// Autoscaler control
+minC := uint32(2)
+maxC := uint32(20)
+fn.UpdateAutoscaler(ctx, &modal.FunctionUpdateAutoscalerParams{
+    MinContainers: &minC,
+    MaxContainers: &maxC,
+})
+```
+
+## TypeScript SDK — Calling Deployed Functions
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+const fn = await modal.functions.fromName("my-app", "process_item");
+
+// Single remote call
+const result = await fn.remote(["arg1"]);
+
+// Parallel spawns (fan-out)
+const calls = await Promise.all(
+    Array.from({ length: 100 }, (_, i) => fn.spawn([i]))
+);
+// Collect results (fan-in)
+const results = await Promise.all(calls.map(c => c.get()));
+
+// Autoscaler control
+await fn.updateAutoscaler({
+    minContainers: 2,
+    maxContainers: 20,
+    bufferContainers: 3,
+});
+
+// Class methods
+const model = await modal.cls.fromName("my-app", "Model");
+const instance = await model.create({ gpu: "A100" });
+const prediction = await instance.method("predict").remote(["input"]);
+```
+
 ## Job Queue Pattern
 
 Use `modal.Queue` + `modal.Function.spawn()` for async job processing:

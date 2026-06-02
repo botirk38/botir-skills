@@ -92,6 +92,66 @@ def read_data():
 
 Supports AWS S3, Google Cloud Storage, and Cloudflare R2.
 
+## Go SDK
+
+```go
+mc, _ := modal.NewClient()
+
+// Create/reference a Volume
+volume, _ := mc.Volumes.FromName(ctx, "my-data", &modal.VolumeFromNameParams{
+    CreateIfMissing: true,
+})
+
+// Use with Sandbox
+app, _ := mc.Apps.FromName(ctx, "my-app", &modal.AppFromNameParams{CreateIfMissing: true})
+image := mc.Images.FromRegistry("alpine:3.21", nil)
+
+sb, _ := mc.Sandboxes.Create(ctx, app, image, &modal.SandboxCreateParams{
+    Volumes: map[string]*modal.Volume{"/data": volume},
+})
+
+// Write to Volume via Sandbox
+p, _ := sb.Exec(ctx, []string{"sh", "-c", "echo 'hello' > /data/msg.txt"}, nil)
+p.Wait(ctx)
+
+// Read-only Volume
+roVol := volume.ReadOnly()
+
+// Ephemeral Volume
+tmpVol, _ := mc.Volumes.Ephemeral(ctx, nil)
+defer tmpVol.CloseEphemeral()
+```
+
+## TypeScript SDK
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+// Create/reference a Volume
+const volume = await modal.volumes.fromName("my-data", { createIfMissing: true });
+
+// Use with Sandbox
+const app = await modal.apps.fromName("my-app", { createIfMissing: true });
+const image = modal.images.fromRegistry("python:3.13");
+
+const sb = await modal.sandboxes.create(app, image, {
+    volumes: { "/data": volume },
+});
+
+// Write to Volume
+const proc = await sb.exec(["sh", "-c", "echo 'hello' > /data/msg.txt"]);
+await proc.wait();
+
+// Read-only Volume
+const roVol = volume.readOnly();
+
+// Ephemeral Volume
+const tmpVol = await modal.volumes.ephemeral();
+// ... use it ...
+tmpVol.closeEphemeral();
+```
+
 ## S3 Gateway Endpoints
 
 When running on AWS, Modal automatically uses S3 Gateway endpoints for zero-cost data transfer. No configuration needed.

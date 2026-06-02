@@ -168,6 +168,78 @@ def consumer():
             break
 ```
 
+## Go SDK — Queues
+
+```go
+mc, _ := modal.NewClient()
+
+// Create/reference a Queue
+queue, _ := mc.Queues.FromName(ctx, "my-queue", &modal.QueueFromNameParams{
+    CreateIfMissing: true,
+})
+
+// Put/Get
+queue.Put(ctx, "task-1", nil)
+queue.PutMany(ctx, []any{"task-2", "task-3"}, nil)
+
+timeout := 5 * time.Second
+item, _ := queue.Get(ctx, &modal.QueueGetParams{Timeout: &timeout})
+
+// Partitions
+queue.Put(ctx, "urgent-1", &modal.QueuePutParams{Partition: "high"})
+item2, _ := queue.Get(ctx, &modal.QueueGetParams{Partition: "high"})
+
+// Iterate
+for item, err := range queue.Iterate(ctx, nil) {
+    if err != nil { break }
+    fmt.Println(item)
+}
+
+// Length
+length, _ := queue.Len(ctx, nil)
+
+// Ephemeral Queue
+tmpQ, _ := mc.Queues.Ephemeral(ctx, nil)
+defer tmpQ.CloseEphemeral()
+```
+
+Note: Go SDK does not support Dict — only Queue.
+
+## TypeScript SDK — Queues
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+// Create/reference a Queue
+const queue = await modal.queues.fromName("my-queue", { createIfMissing: true });
+
+// Put/Get
+await queue.put("task-1");
+await queue.putMany(["task-2", "task-3"]);
+
+const item = await queue.get({ timeoutMs: 5000 });
+
+// Partitions
+await queue.put("urgent-1", { partition: "high" });
+const urgent = await queue.get({ partition: "high" });
+
+// Iterate
+for await (const item of queue.iterate({ itemPollTimeoutMs: 1000 })) {
+    console.log(item);
+}
+
+// Length
+const len = await queue.len();
+const totalLen = await queue.len({ total: true });
+
+// Ephemeral Queue
+const tmpQ = await modal.queues.ephemeral();
+tmpQ.closeEphemeral();
+```
+
+Note: TypeScript SDK does not support Dict — only Queue.
+
 ## Symptom → Fix
 
 | Symptom | Likely cause | Fix |

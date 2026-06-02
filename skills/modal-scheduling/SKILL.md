@@ -100,6 +100,12 @@ modal deploy --name my-scheduled-app script.py
 - Use the "run now" button on the app dashboard to trigger manually
 - Schedules cannot be paused — remove the schedule and redeploy to stop
 
+## Go/TypeScript SDK Note
+
+Scheduling (`modal.Cron`, `modal.Period`) is **Python-only**. Go and TypeScript SDKs cannot define schedules.
+
+To trigger Modal Functions on a schedule from Go/TS, use an external scheduler (e.g., cron job, cloud scheduler) that calls `fn.Spawn()` / `fn.spawn()`.
+
 ## Symptom Triage
 
 ### "Schedule doesn't run"

@@ -146,6 +146,36 @@ modal app stop <app-name>
 
 Stopping is destructive — stopped Apps must be redeployed from source.
 
+## Go/TypeScript SDK Note
+
+Workspace administration (RBAC, environments, service users, SSO) is managed via the Modal dashboard and CLI.
+
+Go/TS SDKs authenticate using the same tokens (`MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`):
+
+```go
+// Go — uses ~/.modal.toml or env vars automatically
+mc, _ := modal.NewClient()
+```
+
+```typescript
+// TypeScript — uses ~/.modal.toml or env vars automatically
+const modal = new ModalClient();
+```
+
+Both SDKs can target specific environments:
+
+```go
+mc, _ := modal.NewClientWithOptions(&modal.ClientParams{
+    Environment: "staging",
+})
+```
+
+```typescript
+const modal = new ModalClient({ environment: "staging" });
+```
+
+For CI/CD, you can use Go or TypeScript SDKs alongside `modal deploy` (Python) — e.g., a Go service that orchestrates Sandboxes while Python defines the Functions.
+
 ## Billing
 
 Modal charges per second of resource usage:

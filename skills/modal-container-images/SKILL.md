@@ -111,6 +111,69 @@ Modal pulls only the layers needed for cold start using eStargz lazy loading. Th
 
 Use `force_build=True` on any image method to skip cache and rebuild.
 
+## Go SDK
+
+```go
+mc, _ := modal.NewClient()
+
+// From registry
+image := mc.Images.FromRegistry("python:3.11-slim", nil)
+
+// With Dockerfile commands
+image = image.DockerfileCommands([]string{
+    "RUN apt-get update && apt-get install -y git",
+    "RUN pip install numpy pandas",
+}, nil)
+
+// GPU build layer
+image = image.DockerfileCommands([]string{
+    "RUN pip install torch",
+}, &modal.ImageDockerfileCommandsParams{
+    GPU: "T4",
+})
+
+// Private registry
+secret, _ := mc.Secrets.FromName(ctx, "docker-hub-secret", nil)
+privateImage := mc.Images.FromRegistry("myorg/private:latest", &modal.ImageFromRegistryParams{
+    Secret: secret,
+})
+
+// AWS ECR / GCP AR
+awsSecret, _ := mc.Secrets.FromName(ctx, "aws-secret", nil)
+ecrImage := mc.Images.FromAwsEcr("123456789.dkr.ecr.us-east-1.amazonaws.com/img:latest", awsSecret)
+
+// Build eagerly
+app, _ := mc.Apps.FromName(ctx, "my-app", &modal.AppFromNameParams{CreateIfMissing: true})
+built, _ := image.Build(ctx, app)
+```
+
+## TypeScript SDK
+
+```typescript
+import { ModalClient } from "modal";
+const modal = new ModalClient();
+
+// From registry
+const image = modal.images.fromRegistry("python:3.13-slim");
+
+// Chain Dockerfile commands
+const customImage = image
+    .dockerfileCommands(["RUN apt-get update && apt-get install -y git"])
+    .dockerfileCommands(["RUN pip install torch"], { gpu: "A100" });
+
+// Private registry
+const secret = await modal.secrets.fromName("docker-hub-secret");
+const privateImage = modal.images.fromRegistry("myorg/private:latest", secret);
+
+// AWS ECR / GCP AR
+const awsSecret = await modal.secrets.fromName("aws-credentials");
+const ecrImage = modal.images.fromAwsEcr("123456789.dkr.ecr.us-east-1.amazonaws.com/img:latest", awsSecret);
+
+// Build eagerly
+const app = await modal.apps.fromName("my-app", { createIfMissing: true });
+const built = await customImage.build(app);
+```
+
 ## Symptom Triage
 
 ### "Module not found" in container

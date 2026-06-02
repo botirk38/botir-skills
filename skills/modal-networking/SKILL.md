@@ -115,6 +115,29 @@ For connecting to VPCs or on-premise networks:
 - Configure proxy with your VPN/gateway IP
 - All container traffic routes through the secure tunnel
 
+## Go/TypeScript SDK Note
+
+Networking configuration (region selection, proxies, port forwarding, `modal.forward()`) is defined in Python Function decorators.
+
+From Go/TS, you can:
+- Create Sandboxes with network access (containers have outbound internet by default)
+- Call deployed Functions that have networking configured in Python
+- Use `sb.Exec()` / `sb.exec()` to run networking tools inside Sandboxes
+
+Sandbox-level network control from Go/TS:
+
+```go
+sb, _ := mc.Sandboxes.Create(ctx, app, image, &modal.SandboxCreateParams{
+    BlockNetworkAccess: true, // disable outbound internet
+})
+```
+
+```typescript
+const sb = await modal.sandboxes.create(app, image, {
+    blockNetworkAccess: true,
+});
+```
+
 ## Symptom Triage
 
 ### "External API rejects requests"
