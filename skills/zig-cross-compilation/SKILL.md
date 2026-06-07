@@ -136,10 +136,11 @@ pub fn _start() noreturn {
 }
 
 // Must provide panic handler
-pub fn panic(msg: []const u8, trace: ?*builtin.StackTrace, ret_addr: ?usize) noreturn {
-    _ = .{ msg, trace, ret_addr };
-    while (true) {}
-}
+pub const panic = std.debug.SimplePanic(.{});
+// Or manually:
+// pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
+//     while (true) {}
+// }
 ```
 
 Build:

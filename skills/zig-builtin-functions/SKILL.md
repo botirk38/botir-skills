@@ -130,7 +130,7 @@ const leading = @clz(value);    // count leading zeros
 const trailing = @ctz(value);   // count trailing zeros
 const ones = @popCount(value);  // count set bits
 const reversed = @byteSwap(value);  // endian swap
-const rotated = @shlWithOverflow(value, amount);
+const shifted, const overflow = @shlWithOverflow(value, amount);  // shift left with overflow detection
 ```
 
 ## Import and Embed

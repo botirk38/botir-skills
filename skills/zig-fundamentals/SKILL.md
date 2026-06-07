@@ -37,8 +37,9 @@ For production I/O (error-aware):
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init) !void {
-    try std.Io.File.stdout().writeStreamingAll(init.io, "Hello, World!\n");
+pub fn main() !void {
+    const stdout = std.io.getStdOut().writer();
+    try stdout.writeAll("Hello, World!\n");
 }
 ```
 

@@ -103,7 +103,7 @@ while (stream.next()) |item| {
 
 ```zig
 retry: while (attempts < max_attempts) : (attempts += 1) {
-    const result = try connect() catch {
+    const result = connect() catch {
         continue :retry;
     };
     return result;
