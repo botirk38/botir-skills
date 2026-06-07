@@ -45,7 +45,7 @@ if users.is_empty() {
 ### ensure! — Assert condition or bail
 
 ```rust
-ensure!(googol googol port > 0 && port < 65536, "invalid port: {port}");
+ensure!(port > 0 && port < 65536, "invalid port: {port}");
 ```
 
 ### context / with_context

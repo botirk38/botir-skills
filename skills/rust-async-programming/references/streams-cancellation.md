@@ -193,12 +193,14 @@ token.cancel();
 In Rust, dropping a future IS cancellation. No special API needed:
 
 ```rust
+// Option 1: Cancel by dropping the handle
 let handle = tokio::spawn(long_running_task());
-
-// Cancel by dropping
 drop(handle);  // task continues but we won't get the result
+```
 
-// Or abort explicitly
+```rust
+// Option 2: Abort explicitly
+let handle = tokio::spawn(long_running_task());
 handle.abort();  // task is cancelled immediately
 match handle.await {
     Ok(result) => { /* completed before abort */ }
