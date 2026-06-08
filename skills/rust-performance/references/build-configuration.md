@@ -1,12 +1,13 @@
 # Build Configuration
 
-Derived primarily from `build-configuration.md`, with support from `profiling.md`.
+Derived primarily from `build-configuration.md`, with support from `profiling.md` in The Rust Performance Book.
 
 ## Runtime Defaults
 
 - Use release builds for runtime evaluation.
 - Treat build settings as performance tools, not just packaging details.
 - Benchmark configuration changes one at a time because they often trade runtime against compile time, size, or debuggability.
+- Use `cargo-wizard` for interactive build configuration selection.
 
 ## High-Leverage Runtime Knobs
 

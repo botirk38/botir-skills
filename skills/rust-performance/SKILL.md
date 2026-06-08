@@ -1,11 +1,11 @@
 ---
 name: rust-performance
-description: Diagnose and improve Rust runtime speed, memory use, binary size, and compile times with a measurement-first workflow distilled from The Rust Performance Book. Use when profiling hot paths, tuning build settings, reducing allocations, improving I/O, or fixing slow Rust builds.
+description: Diagnose and improve Rust runtime speed, memory use, binary size, and compile times with a measurement-first workflow distilled from The Rust Performance Book. Use when profiling hot paths, tuning build settings, reducing allocations, improving I/O, inlining decisions, or fixing slow Rust builds.
 ---
 
 # Rust Performance
 
-Use this skill for Rust optimization work that needs disciplined measurement, targeted changes, and explicit trade-offs, following the methodologies from The Rust Performance Book.
+Use this skill for Rust optimization work that needs disciplined measurement, targeted changes, and explicit trade-offs, following the methodologies from The Rust Performance Book (https://nnethercote.github.io/perf-book/).
 
 ## When to Use This Skill
 
@@ -15,6 +15,8 @@ Use this skill for Rust optimization work that needs disciplined measurement, ta
 - Compile times are slow or regressing
 - Profilers show confusing stacks, symbols, or hotspots
 - `HashMap`, iterators, I/O, logging, or synchronization appear hot
+- Inlining decisions need tuning (function call overhead is hot)
+- Machine code inspection needed for bounds checks or missed vectorization
 - You need a Rust-specific optimization workflow instead of generic advice
 
 ## Core Workflow
@@ -91,16 +93,25 @@ Start with `references/parallelism.md`.
 - Confirm the bottleneck is worth parallelizing
 - Check contention, allocator pressure, and memory locality first
 
+### Function call overhead is hot
+
+Start with `references/inlining-machine-code.md`.
+
+- Consider `#[inline]` or `#[inline(always)]` for small hot functions
+- Use `#[cold]` to outline error paths
+- Inspect generated machine code with Compiler Explorer or `cargo-show-asm`
+
 ## Reference Map
 
-- `references/measurement.md` - benchmarking, profiling, profiler hygiene
+- `references/measurement.md` - benchmarking, profiling, profiler hygiene, specific tools
 - `references/build-configuration.md` - release settings, LTO, allocators, CPU tuning, binary size, faster builds
-- `references/allocations-layout.md` - heap churn, type size, wrapper overhead, data layout
-- `references/collections-iterators.md` - iterator costs, std type behavior, hashing trade-offs
+- `references/allocations-layout.md` - heap churn, type size, wrapper overhead, data layout, SmallVec/ThinVec
+- `references/collections-iterators.md` - iterator costs, std type behavior, hashing trade-offs, alternative hashers
 - `references/io-debugging.md` - buffering, line handling, logging, assertion overhead
+- `references/inlining-machine-code.md` - inline attributes, cold, outlining, machine code inspection, SIMD
 - `references/parallelism.md` - thread-level parallelism and synchronization trade-offs
 - `references/compile-times.md` - timings, macros, monomorphization, linker wins
-- `references/general-principles.md` - optimization mindset and guardrails
+- `references/general-principles.md` - optimization mindset, guardrails, Clippy perf lints
 
 ## Guardrails
 
@@ -174,33 +185,18 @@ panic = "abort"     # Smaller binaries, faster unwinding
 - For container or CLI size work: review profile settings, `panic = "abort"`, and stripping.
 - For synchronization concerns: benchmark the actual primitive and contention pattern instead of assuming.
 
-## Edition Migration
+## Key Tools
 
-When migrating between Rust editions, some patterns may require changes:
-
-### 2021 Edition
-
-Key changes from 2018:
-- `or_patterns` now default: `match x { Some(1) | Some(2) => ... }`
-- Improved disjoint capture in closures: `|| { self.x += 1; }`
-- Reserve syntax for type aliases: `type Result<T> = std::result::Result<T, Error>;`
-
-### Migrating Editions
-
-```bash
-# Check what needs to change
-cargo fix --edition
-
-# Perform migration
-cargo fix --edition 2021
-
-# Update Cargo.toml
-[package]
-edition = "2021"
-```
-
-### Performance Considerations
-
-- Newer editions often have better optimized code paths
-- 2021 edition may improve compile times for some patterns
-- Test thoroughly after migration
+| Tool | Purpose |
+|------|---------|
+| `criterion` / `divan` | Statistical benchmarking |
+| `hyperfine` | CLI program benchmarking |
+| `perf` / `samply` | Sampling profilers (CPU hotspots) |
+| `DHAT` / `dhat-rs` | Heap allocation profiling |
+| `Cachegrind` | Instruction counts, cache simulation |
+| `Coz` | Causal profiling (optimization potential) |
+| `cargo-show-asm` | View generated assembly |
+| `cargo llvm-lines` | LLVM IR bloat diagnosis |
+| `cargo build --timings` | Build parallelism visualization |
+| `cargo-wizard` | Interactive build config chooser |
+| Compiler Explorer | Online assembly inspection |

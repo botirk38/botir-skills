@@ -1,68 +1,44 @@
 # The Rust Performance Book
 
-Based on: https://nnethercote.github.io/perf-book/
+Source: https://nnethercote.github.io/perf-book/
+Author: Nicholas Nethercote and others (first published November 2020)
+
+## Book Structure (Chapters)
+
+1. **Introduction** — measurement-first philosophy, Rust-specific context
+2. **Benchmarking** — criterion, divan, hyperfine, metrics, summarization challenges
+3. **Profiling** — perf, samply, Cachegrind, DHAT, heaptrack, Coz; debug info and frame pointers
+4. **Build Configuration** — release builds, opt-level, LTO, codegen-units, allocators, PGO, binary size, linker choice
+5. **Inlining** — `#[inline]`, `#[inline(always)]`, `#[inline(never)]`, `#[cold]`, outlining, hot/cold splitting
+6. **Heap Allocations** — Box, Rc/Arc, Vec growth, SmallVec, ArrayVec, ThinVec, String, SmartString, HashMap, clone_from
+7. **Type Sizes** — `-Zprint-type-sizes`, boxing enum variants, smaller integers, boxed slices, static_assertions
+8. **Standard Library Types** — Vec tips, Option/Result lazy combinators, Rc/Arc::make_mut, parking_lot
+9. **Hashing** — SipHash default, FxHash, fnv, ahash, nohash-hasher, byte-wise hashing, disallowed-types
+10. **Iterators** — collect avoidance, extend, size_hint, chain cost, chunks_exact, copied
+11. **I/O** — stdout locking, BufReader/BufWriter, line reading, raw bytes
+12. **Logging and Debugging** — lazy logging, debug_assert!, hidden formatting cost
+13. **Wrapper Types** — nested wrappers, grouping related fields
+14. **General Tips** — algorithms first, locality, lazy computation, special-casing common sizes
+15. **Compile Times** — `cargo build --timings`, `-Zmacro-stats`, `cargo llvm-lines`, non-generic inner functions
+16. **Machine Code** — Compiler Explorer, cargo-show-asm, core::arch SIMD intrinsics
+17. **Parallelism** — rayon, crossbeam, SIMD overview
+18. **Linting** — Clippy perf group, disallowed-types, ptr_arg for slices
 
 ## Core Principles
 
-1. **Measure first** - Always establish a baseline
-2. **Change one thing at a time** - For clear causality
-3. **Prefer release builds** - For runtime conclusions
-4. **Consider trade-offs** - Speed vs memory vs compile time etc.
-
-## Key Areas
-
-### Benchmarking
-
-- Use criterion.rs for statistical rigor
-- Consider Hyperfine for simple comparisons
-- Use real-world workloads when possible
-- Microbenchmarks have limitations but can be useful
-
-### Build Configuration
-
-Optimize profiles in Cargo.toml:
-- `opt-level = 3` for maximum optimization
-- `lto = "thin"` or `"fat"` for link-time optimization  
-- `codegen-units = 1` for better optimization (slower builds)
-- `incremental = false` for release builds
-- `debuginfo = 0` to strip debug info
-- `panic = "abort"` for smaller binaries
-
-### Memory Optimization
-
-- Reuse buffers and allocations
-- Prefer stack allocation over heap
-- Use object pools for frequent allocations
-- Minimize unnecessary copying
-- Consider custom allocators for specific needs
-
-### Binary Size
-
-- Enable LTO (Link Time Optimization)
-- Use `panic = "abort"`
-- Strip symbols post-build
-- Remove unused dependencies
-- Consider `#![no_std]` for embedded
-
-### Compile Times
-
-- Reduce monomorphization where possible
-- Limit generic code in hot paths
-- Use incremental compilation during development
-- Optimize build scripts and proc macros
-- Split large crates when appropriate
-
-### CPU-Specific
-
-- Target specific CPU: `RUSTFLAGS="-C target-cpu=native"`
-- Use SIMD when appropriate
-- Consider profile-guided optimization (PGO)
-- Tune allocator for your workload
-- Monitor instruction counts and cycles
+1. **Measure first** — Always establish a baseline before changing code
+2. **Change one thing at a time** — For clear causality
+3. **Prefer release builds** — For runtime conclusions
+4. **Consider trade-offs** — Speed vs memory vs compile time vs debuggability vs portability
 
 ## Reference Map
 
-- `references/measurement.md` - Benchmarking and profiling
-- `references/build-configuration.md` - Cargo profile optimization
-- `references/allocations-layout.md` - Memory and allocation strategies
-- `references/compile-times.md` - Build time optimization
+- `references/measurement.md` — Benchmarking tools, profiling tools, build hygiene
+- `references/build-configuration.md` — Cargo profile optimization, LTO, allocators
+- `references/inlining-machine-code.md` — Inline attributes, cold/hot splitting, assembly inspection
+- `references/allocations-layout.md` — Heap churn, type sizes, SmallVec/ThinVec, static assertions
+- `references/collections-iterators.md` — Iterator patterns, hashing alternatives, byte-wise hashing
+- `references/io-debugging.md` — Buffering, line handling, logging overhead
+- `references/general-principles.md` — Optimization mindset, Clippy perf lints, disallowed-types
+- `references/compile-times.md` — Build timings, macro bloat, LLVM IR, monomorphization
+- `references/parallelism.md` — Rayon, crossbeam, when to parallelize
